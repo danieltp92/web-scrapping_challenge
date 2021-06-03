@@ -15,7 +15,7 @@ def index():
 def scraper():
     list_news = mongo.db.list_news
     list_data = scrape_mars.scrape()
-    list_news.update({}, list_data, upsert=True)
+    list_news.update({}, list_data, upsert=True)   
     return redirect("/", code=302)
 
 if __name__ == "__main__":
