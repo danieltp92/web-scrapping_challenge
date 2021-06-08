@@ -28,6 +28,7 @@ def scrape():
 
     browser.quit()
 
+
     # This section gets the Featured image from Mars
 
     executable_path = {'executable_path' : ChromeDriverManager().install()}
@@ -42,16 +43,66 @@ def scrape():
     feat_img = soup.find("div", class_="header")
     elem = feat_img.find("a", class_="showimg fancybox-thumbs")
     href = elem['href']
-    featured_image_url = url + "/" + href
+    featured_image_url = url + href
 
-    response = requests.get(featured_image_url, stream=True)
-    with open('img.png', 'wb') as out_file:
-        shutil.copyfileobj(response.raw, out_file)
-
-    Image(url='img.png')
+    list_news["src"] = featured_image_url
 
 
     browser.quit()
 
-    return list_news
 
+    # This section extract the facts of Mars
+
+    url = "https://galaxyfacts-mars.com"
+
+    tables = pd.read_html(url)
+    tables
+    mars_df = tables [0]
+    new_head = mars_df.iloc[0]
+    mars_df = mars_df[0:]
+    mars_df.columns = new_head
+    mars_df.rename(columns=mars_df.iloc[0])
+    mars_df = mars_df.iloc[1: , :]
+    mars_df = mars_df.reset_index(drop=True)
+
+    html_table = mars_df.to_html()
+    html_table.replace('\n', '')
+
+    mars_df.to_html('table.html')
+
+
+    # This section gets the images and descriptions of Mars hemispheres
+
+    url = 'https://marshemispheres.com/'
+    executable_path = {'executable_path': ChromeDriverManager().install()}
+    browser = Browser('chrome', **executable_path, headless=False)
+    browser.visit(url)
+
+    html = browser.html
+    soup = bs(html, 'html.parser')
+
+    elements = soup.find_all("div", class_="item")
+
+    texts = soup.find_all("div", class_="description")
+
+
+    i=0
+    for text in texts:
+        i = i+1
+        j=str(i)
+        list_news[j] = text.find('h3').get_text()
+        
+        
+    for element in elements:
+        i = i+1
+        j=str(i)
+        img = element.find('img')
+        src = img['src']
+        list_news[j] = url + src
+
+    print(list_news)
+        
+
+    browser.quit()
+
+    return list_news
